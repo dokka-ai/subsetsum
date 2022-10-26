@@ -6,7 +6,7 @@ namespace subsetsum {
 
 class Solver {
  public:
-  Solver(const std::vector<int>& nums, int target);
+  Solver(const std::vector<long long>& nums, long long target);
 
   virtual ~Solver();
 
@@ -16,31 +16,31 @@ class Solver {
 
   void initSolutionIterator();
 
-  std::vector<int> getNextSolution();
+  std::vector<long long> getNextSolution();
 
  private:
   class QueueItem {
    public:
-    QueueItem(int r, int c, const std::vector<int>& i, int t)
+    QueueItem(long long r, long long c, const std::vector<long long>& i, long long t)
         : row(r), col(c), take(i), togo(t) {}
-    int row, col;
-    std::vector<int> take;
-    int togo;
+    long long row, col;
+    std::vector<long long> take;
+    long long togo;
   };
 
   void flipSign();
 
   void fillDPTable();
 
-  std::vector<int> genSolution(const QueueItem& item) const;
+  std::vector<long long> genSolution(const QueueItem& item) const;
 
-  int n_;
-  std::vector<int> nums_;
-  std::vector<int> remapping_;
-  int target_;
+  long long n_;
+  std::vector<long long> nums_;
+  std::vector<long long> remapping_;
+  long long target_;
   bool has_sol_;
-  int a_, b_;
-  int nrows_, ncols_;
+  long long a_, b_;
+  long long nrows_, ncols_;
   uint8_t* dp_;
   std::vector<QueueItem> queue_;
 };
