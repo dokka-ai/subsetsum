@@ -10,7 +10,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_subsetsum, m) {
     py::class_<subsetsum::Solver>(m, "Solver")
-        .def(py::init<const std::vector<int>&, int>())
+        .def(py::init<const std::vector<long long>&, long long>())
         .def("hasSolution", &subsetsum::Solver::hasSolution)
         .def("initSolutionIterator", &subsetsum::Solver::initSolutionIterator)
         .def("getNextSolution", &subsetsum::Solver::getNextSolution);

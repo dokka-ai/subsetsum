@@ -1,18 +1,18 @@
 from typing import Iterator, List
-
+from ctypes import c_longlong
 import _subsetsum as _cpp
 
 __version__ = _cpp.__version__
 
 
-def solutions(nums: List[int], target: int) -> Iterator[List[int]]:
+def solutions(nums: List[c_longlong], target: c_longlong) -> Iterator[List[c_longlong]]:
     """Enumerates all solutions to SUBSET-SUM. If `nums` is empty,
         no solutions will be generated.
 
     Args:
-        nums (List[int]): A list of integers (positive or negative)
+        nums (List[long long]): A list of integers (positive or negative)
             from which subsets will be generated
-        target (int): The target value (positive or negative) for the
+        target (long long): The target value (positive or negative) for the
             sum of each subset
 
     Returns:
@@ -34,14 +34,14 @@ def solutions(nums: List[int], target: int) -> Iterator[List[int]]:
         solution = solver.getNextSolution()
 
 
-def has_solution(nums: List[int], target: int) -> bool:
+def has_solution(nums: List[c_longlong], target: c_longlong) -> bool:
     """Determines if there is a subset of `nums` which sums to
         `target`. If `nums` is empty, the result is always false.
 
     Args:
-        nums (List[int]): A list of integers (positive or negative)
+        nums (List[long long]): A list of integers (positive or negative)
             for the SUBSET-SUM problem
-        target (int): The target value (positive or negative) which
+        target (long long): The target value (positive or negative) which
             will be used in the SUBSET-SUM problem
 
     Returns:
