@@ -4,45 +4,49 @@
 
 namespace subsetsum {
 
-class Solver {
- public:
-  Solver(const std::vector<long long>& nums, long long target);
+    class Solver {
+    public:
+        typedef std::vector<int> Ints;
+        typedef int Cell;
+        Solver  ( const Ints& nums, const int target );
 
-  virtual ~Solver();
+        virtual ~Solver();
 
-  inline bool hasSolution() const {
-    return has_sol_;
-  }
+        void initSolutionIterator   ( );
+        Ints getNextSolution        ( );
 
-  void initSolutionIterator();
+        bool    hasSolution ( ) const { return has_sol_; }
+        int     sizeMemory  ( ) const { return nrows_ * (_Over*sizeof(Cell) + sizeof(void*)); }
+        int     getGCD      ( ) const { return _GCD; }
 
-  std::vector<long long> getNextSolution();
+    private:
+        class QueueItem {
+        public:
+            QueueItem ( const int r, const int c, const Ints& i, const int t )
+                : row(r), col(c), take(i), togo(t) {}
+            int     row, col;
+            Ints    take;
+            int     togo;
+        };
 
- private:
-  class QueueItem {
-   public:
-    QueueItem(long long r, long long c, const std::vector<long long>& i, long long t)
-        : row(r), col(c), take(i), togo(t) {}
-    long long row, col;
-    std::vector<long long> take;
-    long long togo;
-  };
+        void fillDPTable    ( ) ;
+        Ints genSolution    ( const QueueItem& item ) const;
 
-  void flipSign();
+        const   int _GCD;
+        const   int target_;
 
-  void fillDPTable();
+        Ints    nums_;
+        Ints    remapping_;
+        bool    has_sol_    = true;
+        int     a_;
+        int     nrows_, ncols_;
 
-  std::vector<long long> genSolution(const QueueItem& item) const;
+        Cell*   _pAll;
+        Cell**  _ppRows;
+        int     _Over;
 
-  long long n_;
-  std::vector<long long> nums_;
-  std::vector<long long> remapping_;
-  long long target_;
-  bool has_sol_;
-  long long a_, b_;
-  long long nrows_, ncols_;
-  uint8_t* dp_;
-  std::vector<QueueItem> queue_;
-};
+        std::vector<QueueItem> queue_;
+
+    };
 
 }  // end namespace subsetsum
