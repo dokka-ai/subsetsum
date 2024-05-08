@@ -13,9 +13,9 @@ namespace subsetsum {
     #define GET_BIT(p,k)    (p[(k)/BITS]>>((k)%BITS)) & 1
     #define SET_ONE(p,k)    p[(k)/BITS] |= (ONE<<((k)%BITS))
 
-    static int gcd(const Ints& nums, int target)
+    static Cell gcd(const Ints& nums, Cell target)
     {
-        int ret = std::abs ( target );
+        Cell ret = std::abs ( target );
         for ( const auto& num: nums ) {
             auto cur = std::abs(num);
             if ( ret < cur )
@@ -30,18 +30,18 @@ namespace subsetsum {
     }
 
     Ints mutatingArgsort ( Ints& a ) {
-        const int n = static_cast<int>(a.size());
-        std::vector<std::pair<int, int>> a_indexed(n);
+        const Cell n = static_cast<Cell>(a.size());
+        std::vector<std::pair<Cell, Cell>> a_indexed(n);
         Ints indices(n);
 
-        for (int i = 0; i < n; ++i) {
+        for (Cell i = 0; i < n; ++i) {
             a_indexed[i] = { a[i], i };
         }
         std::stable_sort(a_indexed.begin(), a_indexed.end(),
-            [](const std::pair<int, int>& x, const std::pair<int, int>& y) {
+            [](const std::pair<Cell, Cell>& x, const std::pair<Cell, Cell>& y) {
                 return x.first < y.first;
             });
-        for (int i = 0; i < n; ++i) {
+        for (Cell i = 0; i < n; ++i) {
             a[i] = a_indexed[i].first;
             indices[i] = a_indexed[i].second;
         }
@@ -49,12 +49,12 @@ namespace subsetsum {
         return indices;
     }
 
-    Solver::Solver (const Ints& nums, const int target)
-        : nums_     ( nums )
-        , _GCD      ( gcd ( nums, target ) )
+    Solver::Solver (const Ints& nums, const Cell target)
+        : _GCD      ( gcd ( nums, target ) )
         , target_   ( std::abs(target / _GCD) )
+        , nums_(nums)
     {
-        nrows_ = static_cast<int> ( nums_.size() );
+        nrows_ = static_cast<Cell> ( nums_.size() );
         if ( nrows_ == 0 ) {
             has_sol_ = false;
             return;
@@ -70,8 +70,8 @@ namespace subsetsum {
 
         remapping_ = mutatingArgsort(nums_);
 
-        int negative_sum = 0 ;
-        int positive_sum = 0;
+        Cell negative_sum = 0 ;
+        Cell positive_sum = 0;
 
         for ( const auto& num : nums_ )
             *(num < 0 ? &negative_sum : &positive_sum) += num;
@@ -83,13 +83,13 @@ namespace subsetsum {
 
         a_      = negative_sum;
         ncols_  = target_ - a_ + 1;
-        const auto last = std::find_if(nums_.rbegin(), nums_.rend(), [this] (int i) { return i < this->ncols_; });
+        const auto last = std::find_if(nums_.rbegin(), nums_.rend(), [this] (Cell i) { return i < this->ncols_; });
         nrows_  = std::distance(last, nums_.rend());
         _Over   = (ncols_ + BITS) / BITS;
         _pAll   = new Cell [nrows_ * _Over];
 
         _ppRows = new Cell* [nrows_];
-        for (int i = 0; i < nrows_; i++)
+        for (Cell i = 0; i < nrows_; i++)
             _ppRows[i] = _pAll + i * _Over;
 
         fillDPTable();
@@ -107,15 +107,15 @@ namespace subsetsum {
         SET_ONE(_ppRows[0], nums_[0] - a_);
  
         // Fill the remaining rows of "dp_"
-        for (int i = 1; i < nrows_; ++i) {
+        for (Cell i = 1; i < nrows_; ++i) {
             auto* const       pCur = _ppRows[i];
             const auto* const pPre = _ppRows[i - 1];
             std::memcpy(pCur, pPre, _Over * BYTES);
-            for (int j = 0; j < ncols_; ++j) {
+            for (Cell j = 0; j < ncols_; ++j) {
                 if (nums_[i] == a_ + j)
                     SET_ONE(pCur, j);
                 else {
-                    const int next_col = j - nums_[i] ;
+                    const Cell next_col = j - nums_[i] ;
                     if (0 <= next_col and next_col < ncols_ and GET_BIT(pPre,next_col) )
                         SET_ONE(pCur, j);
                 }
@@ -124,9 +124,9 @@ namespace subsetsum {
     }
 
     Solver::Ints Solver::genSolution(const QueueItem& item) const {
-        const int   n   = static_cast<int>(item.take.size());
+        const Cell   n   = static_cast<Cell>(item.take.size());
         Ints        sol (n);
-        for ( int i = 0; i < n; ++i ) {
+        for ( Cell i = 0; i < n; ++i ) {
             sol [i] = remapping_.at(item.take.at(i));
         }
         std::sort(sol.begin(), sol.end());
@@ -136,7 +136,7 @@ namespace subsetsum {
     void Solver::initSolutionIterator() {
         if (has_sol_) {
             const Ints  take = { nrows_ - 1 };
-            const int   togo = target_ - nums_[nrows_ - 1];
+            const Cell   togo = target_ - nums_[nrows_ - 1];
             queue_ = { QueueItem(nrows_ - 1, ncols_ - 1, take, togo) };
         }
     }
@@ -149,24 +149,24 @@ namespace subsetsum {
             const QueueItem item(queue_.back());
             queue_.pop_back();
 
-            const int row = item.row;
+            const Cell row = item.row;
             if ( row ) {
-                const int col = item.col;
+                const Cell col = item.col;
                 const auto* const pPre = _ppRows[row - 1];
 
                 if ( GET_BIT(pPre,col) ) {
                     Ints take = item.take;
                     take[take.size() - 1] = row - 1;
-                    const int togo = item.togo + nums_[row] - nums_[row - 1];
+                    const Cell togo = item.togo + nums_[row] - nums_[row - 1];
                     queue_.emplace_back(row - 1, col, take, togo);
                 }
 
-                const int next_col = col - nums_[row];
+                const Cell next_col = col - nums_[row];
                 if ( 0 <= next_col and next_col < ncols_) {
                     if (GET_BIT(pPre,next_col)) {
                         Ints      take = item.take;
                         take.emplace_back(row - 1);
-                        const int togo = item.togo - nums_[row - 1];
+                        const Cell togo = item.togo - nums_[row - 1];
                         queue_.emplace_back(row - 1, next_col, take, togo);
                     }
                 }
